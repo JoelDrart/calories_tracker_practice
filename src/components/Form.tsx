@@ -1,30 +1,60 @@
 import { useState } from "react";
 import { categories } from "../data/categories";
 import type { Activity } from "../types";
+import { ActivityActions } from "../reducers/activityReducer";
 
-export default function Form() {
+import { v4 as uuidv4 } from "uuid";
 
-    const [form, setForm] = useState<Activity>({
+type FormProps = {
+    dispatch: React.Dispatch<ActivityActions>;
+}
+
+
+export default function Form({dispatch} : FormProps) {
+
+
+    const initialState : Activity = {
+        id: uuidv4(),
         category: 1,
-        activity: '',
-        calories: 0
-    });
+        activity: "",
+        calories: 0,
+    };
 
-    const handleChange = (e : React.ChangeEvent<HTMLSelectElement> | React.ChangeEvent<HTMLInputElement>) => {
-        const isNumber = ['category', 'calories'].includes(e.target.id);
-        
+    const [form, setForm] = useState<Activity>(initialState);
+
+    const handleChange = (
+        e:
+            | React.ChangeEvent<HTMLSelectElement>
+            | React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const isNumber = ["category", "calories"].includes(e.target.id);
+
         setForm({
             ...form,
-            [e.target.id]: isNumber ? +e.target.value : e.target.value
+            [e.target.id]: isNumber ? +e.target.value : e.target.value,
         });
+    };
+
+    const isValidForm = () => {
+        const { activity, calories } = form;
+        return activity.trim() !== "" && calories > 0;
+    };
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        
+        dispatch({type: "SAVE_ACTIVITY", payload: {newActivity: form}})
+        setForm({...initialState, id: uuidv4()});
     }
 
     return (
         <>
-            <form className="space-y-5 bg-white p-5 rounded-lg shadow-lg w-full mx-11">
+            <form className="space-y-5 bg-white p-5 rounded-lg shadow-lg w-full mx-11" onSubmit={handleSubmit}>
                 {/* <p>Formulario</p> */}
                 <div className="grid grid-cols-1 gap-3">
-                    <label htmlFor="category" className="font-bold">Categoría: </label>
+                    <label htmlFor="category" className="font-bold">
+                        Categoría:{" "}
+                    </label>
                     <select
                         name=""
                         id="category"
@@ -41,7 +71,9 @@ export default function Form() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-3">
-                    <label htmlFor="activity" className="font-bold">Actividad: </label>
+                    <label htmlFor="activity" className="font-bold">
+                        Actividad:{" "}
+                    </label>
                     <input
                         type="text"
                         id="activity"
@@ -53,7 +85,9 @@ export default function Form() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-3">
-                    <label htmlFor="calories" className="font-bold">Calorías: </label>
+                    <label htmlFor="calories" className="font-bold">
+                        Calorías:{" "}
+                    </label>
                     <input
                         type="number"
                         id="calories"
@@ -64,9 +98,12 @@ export default function Form() {
                     />
                 </div>
 
-                <input type="submit" className="bg-gray-800 hover:bg-gray-900 w-full p-2 font-bold uppercase text-white cursor-pointer rounded-lg" value='Guardar' />
-
-
+                <input
+                    type="submit"
+                    className="bg-gray-800 hover:bg-gray-900 w-full p-2 font-bold uppercase text-white cursor-pointer rounded-lg disabled:opacity-50"
+                    value={form.category === 1 ? "Guardar Comida" : "Guardar Ejercicio"}
+                    disabled={!isValidForm()}
+                />
             </form>
         </>
     );

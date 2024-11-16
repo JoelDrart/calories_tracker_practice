@@ -1,7 +1,14 @@
-import "./App.css";
+import { useReducer } from "react";
+import { activityReducer, initialState } from "./reducers/activityReducer";
+
 import Form from "./components/Form";
+import ActivityList from "./components/ActivityList";
 
 function App() {
+
+    const [state, dispatch] = useReducer(activityReducer, initialState);
+
+
     return (
         <>
             <div className="flex flex-col h-screen">
@@ -15,7 +22,9 @@ function App() {
                 <main className="grid grid-cols-[40%_1fr] flex-grow">
                     
                     <section className="bg-lime-300 flex items-center justify-center ">
-                        <Form />
+                        <Form 
+                            dispatch={dispatch}
+                        />
                     </section>
                     
                     <div className="flex flex-col">
@@ -23,7 +32,9 @@ function App() {
                             <h1 className="text-white">Dashboard</h1>
                         </div>
                         <div className=" flex-grow  ">
-                            <h1>Lista de alimentos</h1>
+                            <ActivityList 
+                                activities={state.activities}
+                            />
                         </div>
                     </div>
                 </main>
