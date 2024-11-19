@@ -1,19 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { categories } from "../data/categories";
 import type { Activity } from "../types";
-import { ActivityActions } from "../reducers/activityReducer";
+import { ActivityActions, ActivityState } from "../reducers/activityReducer";
 
 import { v4 as uuidv4 } from "uuid";
 
 type FormProps = {
     dispatch: React.Dispatch<ActivityActions>;
-}
+    state: ActivityState;
+};
 
-
-export default function Form({dispatch} : FormProps) {
-
-
-    const initialState : Activity = {
+export default function Form({ dispatch, state }: FormProps) {
+    const initialState: Activity = {
         id: uuidv4(),
         category: 1,
         activity: "",
@@ -21,6 +19,17 @@ export default function Form({dispatch} : FormProps) {
     };
 
     const [form, setForm] = useState<Activity>(initialState);
+
+    useEffect(() => {
+        if (state.activeId) {
+            const selectedActivity = state.activities.filter(
+                (stateActivity) => stateActivity.id === state.activeId
+            )[0];
+            setForm(selectedActivity);
+        } else {
+            setForm({ ...initialState, id: uuidv4() });
+        }
+    }, [state.activeId, state.activities]);
 
     const handleChange = (
         e:
@@ -42,15 +51,39 @@ export default function Form({dispatch} : FormProps) {
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        
-        dispatch({type: "SAVE_ACTIVITY", payload: {newActivity: form}})
-        setForm({...initialState, id: uuidv4()});
-    }
+
+        dispatch({ type: "SAVE_ACTIVITY", payload: { newActivity: form } });
+        setForm({ ...initialState, id: uuidv4() });
+    };
+
+    const handleCancelEdit = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        dispatch({ type: "CLEAR_ACTIVEID" });
+    };
 
     return (
         <>
-            <form className="space-y-5 bg-white p-5 rounded-lg shadow-lg w-full mx-11" onSubmit={handleSubmit}>
+            <form
+                className="space-y-5 bg-white p-5 rounded-lg shadow-lg w-full mx-11"
+                onSubmit={handleSubmit}
+            >
                 {/* <p>Formulario</p> */}
+                {state.activeId ? (
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-2xl font-bold">Editar Actividad</h2>
+                        <button
+                            className="text-sm text-white bg-red-400 p-2 rounded-lg hover:bg-red-500 hover:shadow-lg cursor-pointer" 
+                            onClick={handleCancelEdit}
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                ) : (
+                    <h2 className="text-center text-2xl font-bold">
+                        Agregar Actividad
+                    </h2>
+                )}
+
                 <div className="grid grid-cols-1 gap-3">
                     <label htmlFor="category" className="font-bold">
                         Categoría:{" "}
@@ -101,7 +134,11 @@ export default function Form({dispatch} : FormProps) {
                 <input
                     type="submit"
                     className="bg-gray-800 hover:bg-gray-900 w-full p-2 font-bold uppercase text-white cursor-pointer rounded-lg disabled:opacity-50"
-                    value={form.category === 1 ? "Guardar Comida" : "Guardar Ejercicio"}
+                    value={
+                        form.category === 1
+                            ? "Guardar Comida"
+                            : "Guardar Ejercicio"
+                    }
                     disabled={!isValidForm()}
                 />
             </form>
